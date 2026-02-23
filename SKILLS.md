@@ -1,6 +1,12 @@
 ---
 name: minions-content-publishing
-description: Publish queue, delivery receipts, and mode configuration
+id: OC-0117
+version: 1.0.0
+description: "Publish queue, delivery receipts, and mode configuration"
+category: ai
+subcategory: general
+tags: ["minion", "ai", "general"]
+comments:
 ---
 
 # minions-content-publishing — Agent Skills
