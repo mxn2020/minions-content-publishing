@@ -1,126 +1,95 @@
 ---
 name: minions-content-publishing
-description: Agent skills for working with Minions Content-publishing MinionTypes. Provides CRUD operations, CLI usage, and best practices for AI agents managing minions-content-publishing data.
+description: Publish queue, delivery receipts, and mode configuration
 ---
 
-# Minions Content-publishing Agent Skills
+# minions-content-publishing — Agent Skills
 
-Skills for agents operating on the `minions-content-publishing` toolbox.
+## What is Content Publishing in the Minions Context?
 
-## Prerequisites
+```
+a job to publish a bundle to a platform    → PublishJob
+confirmation of successful posting         → DeliveryReceipt
+post-publish engagement metrics            → EngagementSnapshot
+```
 
-Install the SDK and CLI:
+---
+
+## MinionTypes
+
+```ts
+// publish-job — queued posting with approval status
+// delivery-receipt — confirmation with platform URL + post ID
+// engagement-snapshot — likes, comments, shares, views over time
+```
+
+See TOML for full field definitions.
+
+---
+
+## Relations
+
+```
+publish-job        --creates-->          delivery-receipt
+delivery-receipt   --tracked_by-->       engagement-snapshot
+publish-job        --publishes-->        asset-bundle (minions-content-assets)
+```
+
+---
+
+## Agent SKILLS for `minions-content-publishing`
+
+```markdown
+# PublisherAgent Skills
+
+## Skill: Publish Bundle
+1. Load approved publish-job and asset-bundle
+2. Post to target platform API
+3. Create delivery-receipt with URL
+
+## Skill: Track Engagement
+1. Periodically snapshot engagement metrics for recent posts
+2. Create engagement-snapshot Minions
+
+## Hard Rules
+- Never publish without approval
+- Every failed publish creates a retry task
+```
+
+
+---
+
+## CLI Reference
+
+Install globally:
 
 ```bash
-# TypeScript
-pnpm add @minions-content-publishing/sdk
-
-# Python
-pip install minions-content-publishing
-
-# CLI
 pnpm add -g @minions-content-publishing/cli
 ```
 
----
+Set `MINIONS_STORE` env var to control where data is stored (default: `.minions/`).
 
-## Using the CLI
-
-The `content-publishing` CLI provides basic project info and utilities:
+### Discover Types
 
 ```bash
-# Show project info (SDK name, CLI name, Python package)
-content-publishing info
+content-publishing types list
+content-publishing types show <type-slug>
 ```
 
-Use the CLI as the primary interface for scripted operations. For programmatic access within agent code, use the SDK directly.
+### CRUD
 
----
-
-## Using the SDK
-
-### TypeScript
-
-```ts
-import { customTypes } from '@minions-content-publishing/sdk/schemas';
-
-// List all available MinionTypes in this toolbox
-for (const type of customTypes) {
-  console.log(`${type.icon} ${type.name} (${type.slug})`);
-  console.log(`  ${type.description}`);
-  console.log(`  Fields: ${type.schema.map(f => f.name).join(', ')}`);
-}
-
-// Access a specific type
-const myType = customTypes.find(t => t.slug === 'YOUR_TYPE_SLUG');
+```bash
+content-publishing create <type> -t "Title" -s "status"
+content-publishing list <type>
+content-publishing show <id>
+content-publishing update <id> --data '{ "status": "active" }'
+content-publishing delete <id>
+content-publishing search "query"
 ```
 
-### Python
+### Stats & Validation
 
-```python
-from minions_content_publishing.schemas import custom_types
-
-# List all available MinionTypes
-for t in custom_types:
-    print(f"{t.icon} {t.name} ({t.slug})")
-    print(f"  {t.description}")
+```bash
+content-publishing stats
+content-publishing validate ./my-minion.json
 ```
-
----
-
-## Skill: Create Minion
-
-When creating a new Minion of any type in this toolbox:
-
-1. Look up the MinionType from `customTypes` by slug
-2. Validate all required fields are present according to the schema
-3. Set `string` fields to their values, `number` fields to numeric values
-4. Set `select` fields to one of their valid options
-5. Set `boolean` fields to `true` or `false`
-6. Always include a timestamp for any `createdAt` or similar fields (ISO 8601 format)
-
----
-
-## Skill: Read / Query Minions
-
-When reading or searching for Minions:
-
-1. Query by MinionType slug to filter by type
-2. Use field values for secondary filtering
-3. For references (fields ending in `Id`), resolve the linked Minion for full context
-4. Return results in a structured format the calling agent can parse
-
----
-
-## Skill: Update Minion
-
-When updating an existing Minion:
-
-1. Load the current Minion by ID
-2. Validate the update against the MinionType schema
-3. Only modify the fields that need changing — preserve existing values
-4. If the type has a `status` field, follow valid status transitions
-5. If the type has an `updatedAt` field, set it to the current timestamp
-6. Log significant field changes for audit if the context requires it
-
----
-
-## Skill: Delete / Archive Minion
-
-When removing a Minion:
-
-1. Prefer soft-delete: set `status` to `"cancelled"` or `"archived"` if available
-2. Never hard-delete Minions that other Minions reference via ID fields
-3. Check for dependent Minions before any destructive operation
-4. If hard-delete is required, ensure all references are cleaned up first
-
----
-
-## Hard Rules
-
-- Every Minion MUST conform to its MinionType schema
-- All `select` fields must use valid option values
-- All ID reference fields must point to existing Minions
-- Timestamps must be in ISO 8601 format
-- Never create orphaned Minions — always set reference fields when applicable
-- This agent only writes to `minions-content-publishing` — it reads from other toolboxes but never writes to them
