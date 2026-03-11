@@ -6,3 +6,4 @@ description: "Publish queue, delivery receipts, and mode configuration"
 priority: high
 deploy_url: null
 tags: null
+category: minion-toolbox

@@ -6,3 +6,4 @@ description: "CLI for minions-content-publishing — Publish queue, delivery rec
 priority: high
 deploy_url: null
 tags: null
+category: minion-toolbox
