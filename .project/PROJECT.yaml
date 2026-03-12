@@ -1,0 +1,16 @@
+name: minions-content-publishing-workspace
+project_scope: main
+project_type: monorepo
+description: Publish queue, delivery receipts, and mode configuration
+tier: prototype
+lane: minions-platform
+priority: medium
+oss: true
+stack: ["typescript"]
+repo: "https://github.com/mxn2020/minions-content-publishing"
+deploy_url: null
+last_active: 2026-03-11
+tags: ["minions-content-publishing-workspace", "minions", "toolbox"]
+notes: null
+id: null
+category: minion-toolbox
